@@ -1,0 +1,4 @@
+pillow-avif
+pillow
+opencv-python
+numpy

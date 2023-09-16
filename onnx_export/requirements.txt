@@ -1,0 +1,4 @@
+six
+paddle2onnx
+onnxsim
+onnxoptimizer

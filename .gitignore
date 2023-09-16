@@ -1,0 +1,13 @@
+.direnv/python/
+*/.direnv/python/
+
+model/
+out/
+node_modules/
+bun.lockb
+.env
+.DS_Store 
+
+/lib/
+/img/
+.run.pid
