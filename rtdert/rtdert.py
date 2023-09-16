@@ -12,48 +12,47 @@ PWD = dirname(abspath(__file__))
 ROOT = dirname(PWD)
 
 ONNX = join(ROOT, 'model/rtdetr_hgnetv2_x_6x_coco_quant.sim.onnx')
-print(ONNX)
 sess = rt.InferenceSession(ONNX, providers=['CoreMLExecutionProvider'])
-img = join(PWD, "test.avif")
-org_img = Image.open(img)
-img = np.array(org_img.convert('RGB'))
-print(img.shape)
-im_shape = np.array([[float(img.shape[0]),
-                      float(img.shape[1])]]).astype('float32')
-img = cv2.resize(img, (640, 640))
-scale_factor = np.array(
-    [[float(640 / img.shape[0]),
-      float(640 / img.shape[1])]]).astype('float32')
 
-img = img.astype(np.float32) / 255.0
-input_img = np.transpose(img, [2, 0, 1])
-image = input_img[np.newaxis, :, :, :]
 
-# https://github.com/PaddlePaddle/Paddle2ONNX
-# 用 https://netron.app/ 查看模型，看最后reshape的name, 获取下面sess.run 的第一个参数
-# 如图 https://i-01.eu.org/2023/09/LnHf9yv.webp
+def rtdert(img):
+  im_shape = np.array([[float(img.shape[0]),
+                        float(img.shape[1])]]).astype('float32')
+  img = cv2.resize(img, (640, 640))
+  scale_factor = np.array(
+      [[float(640 / img.shape[0]),
+        float(640 / img.shape[1])]]).astype('float32')
 
-result = sess.run(['save_infer_model/scale_0.tmp_0'], {
-    'im_shape': im_shape,
-    'image': image,
-    'scale_factor': scale_factor
-})
+  img = img.astype(np.float32) / 255.0
+  input_img = np.transpose(img, [2, 0, 1])
+  image = input_img[np.newaxis, :, :, :]
 
-print(np.array(result[0].shape))
+  # https://github.com/PaddlePaddle/Paddle2ONNX
+  # 用 https://netron.app/ 查看模型，看最后reshape的name, 获取下面sess.run 的第一个参数
+  # 如图 https://i-01.eu.org/2023/09/LnHf9yv.webp
 
-boxli = []
-for value in result[0]:
-  if value[1] > 0.5:
-    label = LABEL[int(value[0])]
-    boxli.append((label + ": %.2f "%(value[1]*100), value[2:6]))
-    # cv2.rectangle(org_img, (int(value[2]), int(value[3])),
-    #               (int(value[4]), int(value[5])), (255, 0, 0), 2)
-    # cv2.putText(org_img,
-    #             str(int(value[0])) + ": " + str(value[1]),
-    #             (int(value[2]), int(value[3])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-    #             (255, 255, 255), 1)
-# cv2.imwrite("./result.png", org_img)
+  result = sess.run(['save_infer_model/scale_0.tmp_0'], {
+      'im_shape': im_shape,
+      'image': image,
+      'scale_factor': scale_factor
+  })
 
-imgbox(org_img,boxli)
+  print(np.array(result[0].shape))
+  return result[0]
 
-org_img.save(join(PWD, 'result.avif'), quality=80)
+
+if __name__ == '__main__':
+  img = join(PWD, "test.avif")
+  org_img = Image.open(img)
+  img = np.array(org_img.convert('RGB'))
+  print(img.shape)
+
+  boxli = []
+  for value in rtdert(img):
+    if value[1] > 0.5:
+      label = LABEL[int(value[0])]
+      boxli.append((label + ": %.2f " % (value[1] * 100), value[2:6]))
+
+  imgbox(org_img, boxli)
+
+  org_img.save(join(PWD, 'result.avif'), quality=80)
