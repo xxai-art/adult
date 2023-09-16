@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import pillow_avif  # noqa
+from PIL import Image
 import onnxruntime as rt
 import cv2
 import numpy as np
@@ -11,7 +13,9 @@ ROOT = dirname(PWD)
 ONNX = join(ROOT, 'model/rtdetr_hgnetv2_x_6x_coco_quant.sim.onnx')
 print(ONNX)
 sess = rt.InferenceSession(ONNX, providers=['CoreMLExecutionProvider'])
-img = cv2.imread(join(PWD, "dog.jpg"))
+img = join(PWD, "test.avif")
+img = Image.open(img)
+img = np.array(img.convert('RGB'))
 print(img.shape)
 org_img = img
 im_shape = np.array([[float(img.shape[0]),
@@ -33,7 +37,9 @@ result = sess.run(['save_infer_model/scale_0.tmp_0'], {
     'image': image,
     'scale_factor': scale_factor
 })
+
 print(np.array(result[0].shape))
+
 for value in result[0]:
   if value[1] > 0.5:
     cv2.rectangle(org_img, (int(value[2]), int(value[3])),
@@ -43,12 +49,3 @@ for value in result[0]:
                 (int(value[2]), int(value[3])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                 (255, 255, 255), 1)
 cv2.imwrite("./result.png", org_img)
-
-# from time import time
-
-# def main():
-#   pass
-
-if __name__ == "__main__":
-  # main()
-  pass
