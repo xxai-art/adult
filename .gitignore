@@ -1,3 +1,5 @@
+__pycache__/
+
 .direnv/python/
 */.direnv/python/
 
