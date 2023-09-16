@@ -76,3 +76,5 @@ dataset.export(
     label_field=label_field,
 )
 ```
+
+https://medium.com/analytics-vidhya/how-to-convert-tensorflow-object-detection-csv-data-to-coco-json-format-d0693d5b2f75
