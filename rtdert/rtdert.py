@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from imgbox import imgbox
 import pillow_avif  # noqa
 from PIL import Image
 import onnxruntime as rt
@@ -14,16 +14,16 @@ ONNX = join(ROOT, 'model/rtdetr_hgnetv2_x_6x_coco_quant.sim.onnx')
 print(ONNX)
 sess = rt.InferenceSession(ONNX, providers=['CoreMLExecutionProvider'])
 img = join(PWD, "test.avif")
-img = Image.open(img)
-img = np.array(img.convert('RGB'))
+org_img = Image.open(img)
+img = np.array(org_img.convert('RGB'))
 print(img.shape)
-org_img = img
 im_shape = np.array([[float(img.shape[0]),
                       float(img.shape[1])]]).astype('float32')
 img = cv2.resize(img, (640, 640))
 scale_factor = np.array(
     [[float(640 / img.shape[0]),
       float(640 / img.shape[1])]]).astype('float32')
+
 img = img.astype(np.float32) / 255.0
 input_img = np.transpose(img, [2, 0, 1])
 image = input_img[np.newaxis, :, :, :]
@@ -40,12 +40,18 @@ result = sess.run(['save_infer_model/scale_0.tmp_0'], {
 
 print(np.array(result[0].shape))
 
+boxli = []
 for value in result[0]:
   if value[1] > 0.5:
-    cv2.rectangle(org_img, (int(value[2]), int(value[3])),
-                  (int(value[4]), int(value[5])), (255, 0, 0), 2)
-    cv2.putText(org_img,
-                str(int(value[0])) + ": " + str(value[1]),
-                (int(value[2]), int(value[3])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                (255, 255, 255), 1)
-cv2.imwrite("./result.png", org_img)
+    boxli.append((str(int(value[0])) + ": " + str(value[1]), value[2:6]))
+    # cv2.rectangle(org_img, (int(value[2]), int(value[3])),
+    #               (int(value[4]), int(value[5])), (255, 0, 0), 2)
+    # cv2.putText(org_img,
+    #             str(int(value[0])) + ": " + str(value[1]),
+    #             (int(value[2]), int(value[3])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+    #             (255, 255, 255), 1)
+# cv2.imwrite("./result.png", org_img)
+
+imgbox(org_img,boxli)
+
+org_img.save(join(PWD, 'result.avif'), quality=80)
