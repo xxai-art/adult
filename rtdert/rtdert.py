@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from imgbox import imgbox
+from label import LABEL
 import pillow_avif  # noqa
 from PIL import Image
 import onnxruntime as rt
@@ -43,7 +44,8 @@ print(np.array(result[0].shape))
 boxli = []
 for value in result[0]:
   if value[1] > 0.5:
-    boxli.append((str(int(value[0])) + ": " + str(value[1]), value[2:6]))
+    label = LABEL[int(value[0])]
+    boxli.append((label + ": %.2f "%(value[1]*100), value[2:6]))
     # cv2.rectangle(org_img, (int(value[2]), int(value[3])),
     #               (int(value[4]), int(value[5])), (255, 0, 0), 2)
     # cv2.putText(org_img,
